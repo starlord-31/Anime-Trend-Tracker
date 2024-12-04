@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+    container_name: anime_tracker_backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - anime_tracker_postgres
+      - mongo
+    environment:
+      POSTGRES_HOST: anime_tracker_postgres
+      POSTGRES_DB: anime_tracker
+      POSTGRES_USER: luffy
+      POSTGRES_PASSWORD: casper
+      MONGO_HOST: mongo
+      MONGO_PORT: 27017
+    volumes:
+      - .:/app  # Mount the current directory to /app in the container
+    working_dir: /app  # Set working directory inside the container
+    command: python app.py  # Run your Flask app
+
+  anime_tracker_postgres:
+    image: postgres:17
+    container_name: anime_tracker_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: anime_tracker
+      POSTGRES_USER: luffy
+      POSTGRES_PASSWORD: casper
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistent data
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mongo_data:/data/db  # Persistent data
+
+volumes:
+  postgres_data:
+  mongo_data:
