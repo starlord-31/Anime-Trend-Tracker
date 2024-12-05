@@ -1,4 +1,15 @@
-env/
+# Ignore Python cache files
 __pycache__/
-*.pyc
+*.py[cod]
+
+# Ignore virtual environments
+env/
+venv/
+
+# Ignore database files
+postgres_data/
+mongo_data/
+
+# Ignore Docker-related files
 *.log
+.dockerignore

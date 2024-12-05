@@ -33,7 +33,7 @@ services:
       POSTGRES_PASSWORD: casper
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Persistent data
-
+      - ./init_anime.sql:/docker-entrypoint-initdb.d/init_anime.sql  # Custom initialization script
   mongo:
     image: mongo:6.0
     container_name: mongo
