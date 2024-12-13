@@ -10,7 +10,7 @@ st.title("Anime Tracker Dashboard")
 st.sidebar.title("Navigation")
 
 # Sidebar Navigation
-menu = st.sidebar.radio("Go to:", ["Home", "Search Anime", "Trending Anime", "Anime Reviews", "Review Stats", "Anime Recommender"])
+menu = st.sidebar.radio("Go to:", ["Home", "Search Anime", "Trending Anime", "Review Stats", "Anime Recommender"])
 
 if menu == "Home":
     st.header("Top 10 Anime by Popularity")
@@ -106,26 +106,6 @@ elif menu == "Trending Anime":
             st.write("---")
     else:
         st.error("Failed to fetch trending anime.")
-
-elif menu == "Anime Reviews":
-    st.header("Anime Reviews")
-    anime_id = st.number_input("Anime ID", min_value=1, step=1)
-
-    if st.button("Get Reviews"):
-        response = requests.get(f"{BASE_URL}/reviews/{anime_id}")
-
-        if response.status_code == 200:
-            reviews = response.json()
-            if reviews:
-                for review in reviews:
-                    st.subheader(f"User: {review['username']}")
-                    st.write(f"**Review:** {review['review']}")
-                    st.write(f"**Score:** {review['score']}")
-                    st.write("---")
-            else:
-                st.info("No reviews found for this anime.")
-        else:
-            st.error("Failed to fetch reviews.")
 
 elif menu == "Review Stats":
     st.header("Review Stats")
