@@ -11,7 +11,7 @@ services:
       - anime_tracker_postgres
       - mongo
       - rabbitmq
-        # No condition here; MongoDB will just start without health checks.
+      - recommender
     environment:
       POSTGRES_HOST: anime_tracker_postgres
       POSTGRES_DB: anime_tracker
@@ -78,6 +78,19 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     networks:
       - anime-network
+
+  recommender:
+    build:
+      context: .
+    container_name: anime_recommender_service
+    ports:
+      - "5001:5000"  # Exposing the recommender on port 5001
+    networks:
+      - anime-network
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: python anime_recommender.py  # Run the recommender service
 
 networks:
   anime-network:

@@ -21,3 +21,6 @@ streamlit
 pika
 celery
 gunicorn
+scikit-learn
+pandas
+numpy

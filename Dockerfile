@@ -18,6 +18,10 @@ WORKDIR /app
 # Copy the requirements file
 COPY requirements.txt /app/
 
+COPY anime_recommender.py /app/anime_recommender.py
+COPY anime_data.csv /app/anime_data.csv
+COPY reviews_data.csv /app/reviews_data.csv
+
 # Upgrade pip and install dependencies
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 

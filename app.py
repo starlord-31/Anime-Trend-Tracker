@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from celery import Celery
+from anime_recommender import load_data, initialize_vectorizer, recommend
 import psycopg2
 from pymongo import MongoClient
 import requests
@@ -274,6 +275,30 @@ def get_genres():
             for genre in row[0].split(', '):  # Genres are stored as comma-separated strings
                 genres.add(genre.strip())
         return jsonify(sorted(genres)), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/recommend', methods=['POST'])
+def get_recommendations():
+    try:
+        # Load anime data and initialize the recommender
+        anime_data, _ = load_data()
+        _, genre_matrix, title_to_index = initialize_vectorizer(anime_data)
+
+        # Parse user input
+        data = request.get_json()
+        user_titles = data.get("titles", [])
+        if not user_titles:
+            return jsonify({"error": "No anime titles provided"}), 400
+
+        # Generate recommendations
+        recommendations = recommend(user_titles, anime_data, title_to_index, genre_matrix, top_n=5)
+        if recommendations.empty:
+            return jsonify({"message": "No recommendations found"}), 200
+
+        # Return recommendations as JSON
+        return recommendations.to_json(orient="records"), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
