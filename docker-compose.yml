@@ -10,6 +10,8 @@ services:
     depends_on:
       - anime_tracker_postgres
       - mongo
+      - rabbitmq
+        # No condition here; MongoDB will just start without health checks.
     environment:
       POSTGRES_HOST: anime_tracker_postgres
       POSTGRES_DB: anime_tracker
@@ -17,10 +19,14 @@ services:
       POSTGRES_PASSWORD: casper
       MONGO_HOST: mongo
       MONGO_PORT: 27017
+      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      CELERY_RESULT_BACKEND: "rpc://"
+    networks:
+      - anime-network
     volumes:
       - .:/app  # Mount the current directory to /app in the container
     working_dir: /app  # Set working directory inside the container
-    command: python app.py  # Run your Flask app
+    command: gunicorn -w 4 -b 0.0.0.0:5000 --timeout 300 app:app  # Use Gunicorn for better performance
 
   anime_tracker_postgres:
     image: postgres:17
@@ -31,21 +37,52 @@ services:
       POSTGRES_DB: anime_tracker
       POSTGRES_USER: luffy
       POSTGRES_PASSWORD: casper
+    networks:
+      - anime-network
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Persistent data
       - ./init_anime.sql:/docker-entrypoint-initdb.d/init_anime.sql  # Custom initialization script
+
   mongo:
     image: mongo:6.0
     container_name: mongo
     ports:
       - "27017:27017"
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    networks:
+      - anime-network
     volumes:
       - mongo_data:/data/db  # Persistent data
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: anime_tracker_frontend
+    ports:
+      - "8501:8501"
+    depends_on:
+      - backend
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: streamlit run streamlit_frontend.py --server.port=8501 --server.address=0.0.0.0
+    
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # For RabbitMQ connections
+      - "15672:15672"   # For RabbitMQ Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - anime-network
+
+networks:
+  anime-network:
+    name: anime-network
+    driver: bridge
 
 volumes:
   postgres_data:

@@ -7,7 +7,8 @@ ENV PYTHONUNBUFFERED 1
 
 # Install system dependencies for psycopg2 or other libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev gcc \
+    curl libpq-dev gcc \
+    && apt-get install -y iputils-ping \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

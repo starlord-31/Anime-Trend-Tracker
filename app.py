@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, request
+from celery import Celery
 import psycopg2
 from pymongo import MongoClient
 import requests
 import time
 
 app = Flask(__name__)
+celery = Celery(broker="amqp://guest:guest@rabbitmq:5672//", backend="rpc://")
 
 # PostgreSQL Connection
 try:
@@ -217,28 +219,14 @@ def search_anime():
 
 @app.route('/api/anime/trending', methods=['GET'])
 def get_trending_anime():
-    """Get trending anime based on popularity."""
+    """Get trending anime asynchronously."""
     try:
-        limit = int(request.args.get('limit', 10))  # Default to top 10 
-        cursor = pg_conn.cursor()
-        cursor.execute("SELECT id, title, genre, rating, synopsis, aired_start, aired_end, popularity, type FROM anime ORDER BY popularity ASC LIMIT 10")
-        rows = cursor.fetchall()
-        cursor.close()
-
-        trending_anime = [
-            {
-                "id": row[0],
-                "title": row[1],
-                "genre": row[2],
-                "rating": row[3],
-                "synopsis": row[4],
-                "aired_start": row[5],
-                "aired_end": row[6],
-                "popularity": row[7],
-                "type": row[8]
-            } for row in rows
-        ]
-        return jsonify(trending_anime), 200
+        limit = int(request.args.get('limit', 10))  # Default to top 10
+        task = celery.send_task("worker.get_trending_anime", args=[limit])
+        result = task.get(timeout=10)  # Wait for the Celery task to complete
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 500
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -269,6 +257,23 @@ def get_review_stats(anime_id):
         if stats:
             return jsonify(stats[0]), 200
         return jsonify({"error": "No reviews found for this anime"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/anime/genres', methods=['GET'])
+def get_genres():
+    """Retrieve a list of unique genres."""
+    try:
+        cursor = pg_conn.cursor()
+        cursor.execute("SELECT DISTINCT genre FROM anime WHERE genre IS NOT NULL")
+        rows = cursor.fetchall()
+        cursor.close()
+        # Flatten genres and split by commas
+        genres = set()
+        for row in rows:
+            for genre in row[0].split(', '):  # Genres are stored as comma-separated strings
+                genres.add(genre.strip())
+        return jsonify(sorted(genres)), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
