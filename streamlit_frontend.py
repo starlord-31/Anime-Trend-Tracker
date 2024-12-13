@@ -10,7 +10,7 @@ st.title("Anime Tracker Dashboard")
 st.sidebar.title("Navigation")
 
 # Sidebar Navigation
-menu = st.sidebar.radio("Go to:", ["Home", "Search Anime", "Trending Anime", "Anime Reviews", "Review Stats"])
+menu = st.sidebar.radio("Go to:", ["Home", "Search Anime", "Trending Anime", "Anime Reviews", "Review Stats", "Anime Recommender"])
 
 if menu == "Home":
     st.header("Top 10 Anime by Popularity")
@@ -21,7 +21,7 @@ if menu == "Home":
         trending_anime = response.json()
         for anime in trending_anime:
             st.subheader(anime['title'])
-            st.write(f"**Genre:** {anime['genre']}")
+            st.write(f"**Genre:** {anime['genre']}") 
             st.write(f"**Rating:** {anime['rating']}")
             st.write(f"**Synopsis:** {anime['synopsis']}")
             st.write(f"**Type:** {anime['type']}")
@@ -29,6 +29,29 @@ if menu == "Home":
             st.write("---")
     else:
         st.error("Failed to fetch top anime.")
+
+elif menu == "Anime Recommender":
+    st.header("Anime Recommender")
+    user_input = st.text_input("Enter your favorite anime titles (comma-separated):")
+    if st.button("Get Recommendations"):
+        if user_input:
+            titles = [title.strip() for title in user_input.split(",")]
+            payload = {"titles": titles}
+            try:
+                response = requests.post(f"{BASE_URL}/recommend", json=payload, timeout=30)
+                if response.status_code == 200:
+                    recommendations = response.json()
+                    if recommendations:
+                        st.write("### Recommended Anime:")
+                        st.table(recommendations)
+                    else:
+                        st.info("No recommendations found. Try different titles.")
+                else:
+                    st.error(f"Error: {response.json().get('error', 'Unknown error')}")
+            except Exception as e:
+                st.error(f"An error occurred: {str(e)}")
+        else:
+            st.warning("Please enter at least one anime title.")
 
 elif menu == "Search Anime":
     st.header("Search Anime")
