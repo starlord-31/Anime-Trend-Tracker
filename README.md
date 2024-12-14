@@ -63,7 +63,12 @@ Repopulate the anime data and review data using `POST` requests via Postman or c
 
 2. **Populate Reviews Data**:
    ```bash
-   curl -X POST http://localhost:5000/api/reviews/populate
+   curl -X POST http://localhost:5000/api/reviews/populate \
+   -H "Content-Type: application/json" \
+   -d '[
+         {"anime_id": 1},
+         {"anime_id": 2}
+       ]'
    ```
 
 3. **Verify the Data**:
@@ -156,6 +161,17 @@ docker-compose run backend celery -A worker.app worker --loglevel=info
 4. **Populate Reviews Data**:
    - Endpoint: `/api/reviews/populate`
    - Method: `POST`
+   - Payload Example:
+     ```json
+     [
+       {
+         "anime_id": 1
+       },
+       {
+         "anime_id": 2
+       }
+     ]
+     ```
 
 ---
 
@@ -191,4 +207,4 @@ docker-compose run backend celery -A worker.app worker --loglevel=info
 
 ---
 
-This README provides all steps for setting up and running the Anime Trend Tracker project locally. For any additional issues, refer to the source code or contact the maintainer.
+This README provides all steps for setting up and running the Anime Trend Tracker project locally.
