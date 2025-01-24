@@ -1,3 +1,4 @@
+
 # Anime Trend Tracker
 
 Anime Trend Tracker is a web application that provides anime recommendations, trending anime, and other features using a combination of Flask (backend), Streamlit (frontend), Celery (worker tasks), RabbitMQ, and PostgreSQL.
@@ -208,3 +209,5 @@ docker-compose run backend celery -A worker.app worker --loglevel=info
 ---
 
 This README provides all steps for setting up and running the Anime Trend Tracker project locally.
+
+d42a43bc548f1c6e7e21a71b3d080107e32079fc
